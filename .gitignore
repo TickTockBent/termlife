@@ -30,3 +30,4 @@ Thumbs.db
 
 # goreleaser
 dist/
+.env
