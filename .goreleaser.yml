@@ -63,6 +63,37 @@ brews:
     test: |
       system "#{bin}/termlife", "--version"
 
+# Snapcraft for Linux (snap install termlife)
+# snapcrafts:
+#   - name: termlife
+#     summary: Terminal-based Game of Life
+#     description: |
+#       A terminal-based Game of Life implementation in Go.
+#       Single binary, zero config, just works.
+#     grade: stable
+#     confinement: strict
+#     license: MIT
+
+# AUR for Arch Linux - requires separate PKGBUILD repo
+# aurs:
+#   - name: termlife-bin
+#     homepage: https://github.com/ticktockbent/termlife
+#     description: Terminal-based Game of Life implementation
+#     license: MIT
+
+# .deb and .rpm packages
+nfpms:
+  - id: termlife
+    package_name: termlife
+    vendor: ticktockbent
+    homepage: https://github.com/ticktockbent/termlife
+    maintainer: ticktockbent
+    description: Terminal-based Game of Life implementation
+    license: MIT
+    formats:
+      - deb
+      - rpm
+
 release:
   github:
     owner: ticktockbent
