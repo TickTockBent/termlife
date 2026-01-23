@@ -8,21 +8,37 @@ A terminal-based Game of Life implementation in Go. Single binary, zero config, 
 
 ## Installation
 
-### Via Go
-
-```bash
-go install github.com/ticktockbent/termlife@latest
-```
-
-### Via Homebrew
+### macOS
 
 ```bash
 brew install ticktockbent/tap/termlife
 ```
 
-### Download Binary
+### Linux (Debian/Ubuntu)
 
-Download prebuilt binaries from the [Releases](https://github.com/ticktockbent/termlife/releases) page.
+```bash
+# Download the .deb from the latest release
+curl -LO https://github.com/ticktockbent/termlife/releases/latest/download/termlife_linux_amd64.deb
+sudo dpkg -i termlife_linux_amd64.deb
+```
+
+### Linux (Fedora/RHEL)
+
+```bash
+# Download the .rpm from the latest release
+curl -LO https://github.com/ticktockbent/termlife/releases/latest/download/termlife_linux_amd64.rpm
+sudo rpm -i termlife_linux_amd64.rpm
+```
+
+### Windows
+
+Download `termlife_windows_amd64.zip` from the [Releases](https://github.com/ticktockbent/termlife/releases) page, extract, and add to your PATH.
+
+### Via Go (any platform)
+
+```bash
+go install github.com/ticktockbent/termlife@latest
+```
 
 ## Usage
 
