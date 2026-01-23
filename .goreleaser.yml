@@ -1,0 +1,71 @@
+version: 2
+
+project_name: termlife
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: termlife
+    main: .
+    binary: termlife
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+
+archives:
+  - id: termlife
+    builds:
+      - termlife
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+
+brews:
+  - name: termlife
+    repository:
+      owner: ticktockbent
+      name: homebrew-tap
+    directory: Formula
+    homepage: https://github.com/ticktockbent/termlife
+    description: Terminal-based Game of Life implementation
+    license: MIT
+    test: |
+      system "#{bin}/termlife", "--version"
+
+release:
+  github:
+    owner: ticktockbent
+    name: termlife
+  draft: false
+  prerelease: auto

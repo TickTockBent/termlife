@@ -1,0 +1,32 @@
+# Binary
+termlife
+termlife.exe
+
+# GIF output
+*.gif
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# goreleaser
+dist/
