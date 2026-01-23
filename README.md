@@ -2,6 +2,10 @@
 
 A terminal-based Game of Life implementation in Go. Single binary, zero config, just works.
 
+![Glider](glider_loop.gif)
+
+![Gosper-Gun](termlife.gif)
+
 ## Installation
 
 ### Via Go

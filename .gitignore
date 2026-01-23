@@ -2,8 +2,8 @@
 termlife
 termlife.exe
 
-# GIF output
-*.gif
+# GIF output (keep example gifs)
+# *.gif
 
 # Go
 *.exe
