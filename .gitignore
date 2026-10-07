@@ -30,4 +30,8 @@ Thumbs.db
 
 # goreleaser
 dist/
+
+# Downloaded or built packages
+*.deb
+*.rpm
 .env
