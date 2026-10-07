@@ -21,6 +21,8 @@ const (
 	ActionMoveLeft
 	ActionMoveRight
 	ActionToggleCell
+	ActionPaintCell
+	ActionEraseCell
 )
 
 // HandleInput processes keyboard and mouse events, returns the action to take
@@ -82,12 +84,27 @@ func handleRuneKey(r rune, game *Game) Action {
 	return ActionNone
 }
 
+// handleMouseEvent paints with the left button and erases with the right,
+// moving the cursor to the cell under the pointer. Dragging paints a stroke.
 func handleMouseEvent(ev *tcell.EventMouse, game *Game) Action {
-	// Mouse support for future enhancement
-	// Could toggle cells on click when paused
-	_ = ev
-	_ = game
-	return ActionNone
+	var action Action
+	switch {
+	case ev.Buttons()&tcell.ButtonPrimary != 0:
+		action = ActionPaintCell
+	case ev.Buttons()&tcell.ButtonSecondary != 0:
+		action = ActionEraseCell
+	default:
+		return ActionNone
+	}
+
+	screenX, screenY := ev.Position()
+	cellX := screenX / 2 // Two characters per cell
+	if cellX >= game.Grid.Width || screenY >= game.Grid.Height {
+		return ActionNone
+	}
+	game.CursorX = cellX
+	game.CursorY = screenY
+	return action
 }
 
 // ApplyAction performs the action on the game state
@@ -155,6 +172,12 @@ func ApplyAction(action Action, game *Game, density float64, rng func() float64)
 		if game.Paused {
 			game.SetCell(game.CursorX, game.CursorY, !game.Grid.Get(game.CursorX, game.CursorY))
 		}
+
+	case ActionPaintCell:
+		game.SetCell(game.CursorX, game.CursorY, true)
+
+	case ActionEraseCell:
+		game.SetCell(game.CursorX, game.CursorY, false)
 	}
 	return false
 }

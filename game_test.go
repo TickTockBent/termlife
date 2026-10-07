@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/gdamore/tcell/v2"
+)
 
 func newTestGame(width, height int, themeName string) *Game {
 	return NewGame(NewGrid(width, height, false), ConwayRule(), Themes[themeName], 10)
@@ -90,6 +94,33 @@ func TestGameResize(t *testing.T) {
 	game.Resize(30, 30)
 	if !game.Grid.Get(2, 3) || game.Grid.Width != 30 {
 		t.Error("growing the grid should keep existing cells")
+	}
+}
+
+func TestMousePaintAndErase(t *testing.T) {
+	game := newTestGame(10, 10, "white")
+
+	// Screen column 7 is the second half of cell 3
+	action := HandleInput(tcell.NewEventMouse(7, 4, tcell.ButtonPrimary, tcell.ModNone), game)
+	if action != ActionPaintCell || game.CursorX != 3 || game.CursorY != 4 {
+		t.Fatalf("left click: action=%v cursor=(%d,%d), want paint at (3,4)", action, game.CursorX, game.CursorY)
+	}
+	ApplyAction(action, game, 0, nil)
+	if !game.Grid.Get(3, 4) {
+		t.Error("left click should make the cell alive")
+	}
+
+	action = HandleInput(tcell.NewEventMouse(7, 4, tcell.ButtonSecondary, tcell.ModNone), game)
+	ApplyAction(action, game, 0, nil)
+	if action != ActionEraseCell || game.Grid.Get(3, 4) {
+		t.Error("right click should make the cell dead")
+	}
+
+	if action := HandleInput(tcell.NewEventMouse(7, 4, tcell.ButtonNone, tcell.ModNone), game); action != ActionNone {
+		t.Errorf("motion without buttons should be ignored, got %v", action)
+	}
+	if action := HandleInput(tcell.NewEventMouse(5, 10, tcell.ButtonPrimary, tcell.ModNone), game); action != ActionNone {
+		t.Errorf("click below the grid (status bar) should be ignored, got %v", action)
 	}
 }
 

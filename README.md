@@ -115,6 +115,8 @@ termlife --gif 50 --pattern r-pentomino --size 60x60 --color rainbow
 | `-` | Decrease speed |
 | `Arrow keys` | Move cursor (when paused) |
 | `Enter` | Toggle cell at cursor (when paused) |
+| Left click / drag | Draw live cells (paused or running) |
+| Right click / drag | Erase cells |
 
 ## Color Themes
 
