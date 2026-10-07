@@ -118,3 +118,12 @@ func (g *Grid) CountAlive() int {
 	}
 	return count
 }
+
+// Resize changes the grid dimensions, keeping cells in the overlapping top-left region
+func (g *Grid) Resize(width, height int) {
+	resized := NewGrid(width, height, g.Wrap)
+	for y := 0; y < min(g.Height, height); y++ {
+		copy(resized.Cells[y], g.Cells[y][:min(g.Width, width)])
+	}
+	*g = *resized
+}

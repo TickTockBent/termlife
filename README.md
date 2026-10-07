@@ -87,11 +87,11 @@ termlife --gif 50 --pattern r-pentomino --size 60x60 --color rainbow
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--pattern` | `random` | Initial pattern: `random`, `glider`, `blinker`, `pulsar`, `gosper-gun`, `diehard`, `acorn`, `r-pentomino`, `lwss`, `block`, `beehive`, `loaf`, `pentadecathlon` |
+| `--pattern` | `random` | Initial pattern: `random`, `glider`, `blinker`, `toad`, `beacon`, `pulsar`, `gosper-gun`, `diehard`, `acorn`, `r-pentomino`, `lwss`, `block`, `beehive`, `loaf`, `pentadecathlon` |
 | `--rule` | `B3/S23` | Birth/survival rule string |
 | `--color` | `white` | Color theme: `white`, `green`, `matrix`, `amber`, `cyan`, `rainbow` |
 | `--fps` | `10` | Frames per second (1-60) |
-| `--size` | auto | Grid dimensions as `WxH`, defaults to terminal size |
+| `--size` | auto | Grid dimensions as `WxH`; defaults to terminal size and follows resizes |
 | `--wrap` | `false` | Enable toroidal wrapping |
 | `--density` | `0.25` | Cell density for random initialization (0.0-1.0) |
 | `--gif` | - | Number of frames to render (enables GIF mode) |

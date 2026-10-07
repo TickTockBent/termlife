@@ -153,66 +153,8 @@ func ApplyAction(action Action, game *Game, density float64, rng func() float64)
 
 	case ActionToggleCell:
 		if game.Paused {
-			game.Grid.Toggle(game.CursorX, game.CursorY)
-			// Reset age for toggled cell
-			if game.Ages != nil {
-				if game.Grid.Get(game.CursorX, game.CursorY) {
-					game.Ages[game.CursorY][game.CursorX] = 0
-				} else {
-					game.Ages[game.CursorY][game.CursorX] = 0
-				}
-			}
+			game.SetCell(game.CursorX, game.CursorY, !game.Grid.Get(game.CursorX, game.CursorY))
 		}
 	}
 	return false
-}
-
-// stepWithAges advances the simulation and updates cell ages
-func stepWithAges(game *Game) {
-	if game.Ages == nil {
-		game.Grid.Step(game.Rule)
-		game.Generation++
-		return
-	}
-
-	// Track which cells survive for age tracking
-	oldCells := make([][]bool, game.Grid.Height)
-	for y := range oldCells {
-		oldCells[y] = make([]bool, game.Grid.Width)
-		copy(oldCells[y], game.Grid.Cells[y])
-	}
-
-	game.Grid.Step(game.Rule)
-
-	// Update ages
-	for y := 0; y < game.Grid.Height; y++ {
-		for x := 0; x < game.Grid.Width; x++ {
-			if game.Grid.Cells[y][x] {
-				if oldCells[y][x] {
-					// Cell survived, increment age
-					game.Ages[y][x]++
-				} else {
-					// New cell born, reset age
-					game.Ages[y][x] = 0
-				}
-			} else {
-				// Cell died
-				game.Ages[y][x] = 0
-			}
-		}
-	}
-
-	game.Generation++
-}
-
-// resetAges resets all cell ages to 0
-func resetAges(game *Game) {
-	if game.Ages == nil {
-		return
-	}
-	for y := range game.Ages {
-		for x := range game.Ages[y] {
-			game.Ages[y][x] = 0
-		}
-	}
 }

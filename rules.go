@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -32,14 +33,16 @@ func ParseRule(s string) (*Rule, error) {
 	}
 
 	var birthPart, survivalPart string
+	var hasBirth, hasSurvival bool
 
 	for _, part := range parts {
-		if strings.HasPrefix(part, "B") {
-			birthPart = strings.TrimPrefix(part, "B")
-		} else if strings.HasPrefix(part, "S") {
-			survivalPart = strings.TrimPrefix(part, "S")
-		} else {
-			return nil, fmt.Errorf("invalid rule part: expected B or S prefix, got %q", part)
+		switch {
+		case strings.HasPrefix(part, "B") && !hasBirth:
+			birthPart, hasBirth = strings.TrimPrefix(part, "B"), true
+		case strings.HasPrefix(part, "S") && !hasSurvival:
+			survivalPart, hasSurvival = strings.TrimPrefix(part, "S"), true
+		default:
+			return nil, fmt.Errorf("invalid rule part: expected one B and one S section, got %q", part)
 		}
 	}
 
@@ -73,6 +76,9 @@ func parseDigits(s string) ([]int, error) {
 		}
 		if n < 0 || n > 8 {
 			return nil, fmt.Errorf("neighbor count must be 0-8, got %d", n)
+		}
+		if slices.Contains(result, n) {
+			continue
 		}
 		result = append(result, n)
 	}
@@ -114,9 +120,9 @@ func (r *Rule) String() string {
 
 // Common rule presets
 var (
-	RuleConway     = &Rule{Birth: []int{3}, Survival: []int{2, 3}}         // B3/S23 - Conway's Game of Life
-	RuleHighLife   = &Rule{Birth: []int{3, 6}, Survival: []int{2, 3}}      // B36/S23 - HighLife
-	RuleMaze       = &Rule{Birth: []int{3}, Survival: []int{1, 2, 3, 4, 5}} // B3/S12345 - Maze
+	RuleConway     = &Rule{Birth: []int{3}, Survival: []int{2, 3}}                // B3/S23 - Conway's Game of Life
+	RuleHighLife   = &Rule{Birth: []int{3, 6}, Survival: []int{2, 3}}             // B36/S23 - HighLife
+	RuleMaze       = &Rule{Birth: []int{3}, Survival: []int{1, 2, 3, 4, 5}}       // B3/S12345 - Maze
 	RuleReplicator = &Rule{Birth: []int{1, 3, 5, 7}, Survival: []int{1, 3, 5, 7}} // B1357/S1357 - Replicator
-	RuleSeeds      = &Rule{Birth: []int{2}, Survival: []int{}}             // B2/S - Seeds
+	RuleSeeds      = &Rule{Birth: []int{2}, Survival: []int{}}                    // B2/S - Seeds
 )

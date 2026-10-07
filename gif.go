@@ -74,6 +74,12 @@ var GIFColors = map[string]struct {
 
 // ExportGIF renders the simulation to a GIF file
 func ExportGIF(game *Game, cfg GIFConfig, density float64, rng func() float64) error {
+	// Create the output first so a bad path fails before any rendering work
+	f, err := os.Create(cfg.Output)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+
 	// Print header
 	fmt.Printf("termlife: rendering %d frames at %dx%d\n", cfg.Frames, game.Grid.Width, game.Grid.Height)
 
@@ -117,18 +123,17 @@ func ExportGIF(game *Game, cfg GIFConfig, density float64, rng func() float64) e
 	fmt.Println() // Newline after progress bar
 
 	// Write file
-	f, err := os.Create(cfg.Output)
-	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
-	}
-	defer f.Close()
-
 	if err := gif.EncodeAll(f, anim); err != nil {
+		f.Close()
+		os.Remove(cfg.Output)
 		return fmt.Errorf("failed to encode GIF: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("failed to write GIF: %w", err)
 	}
 
 	// Get file size
-	info, err := f.Stat()
+	info, err := os.Stat(cfg.Output)
 	if err == nil {
 		sizeKB := float64(info.Size()) / 1024
 		if sizeKB > 1024 {
@@ -189,15 +194,15 @@ func buildPalette(themeName string, rainbow bool) color.Palette {
 	if rainbow {
 		// Rainbow palette: dead + 8 age-based colors
 		return color.Palette{
-			color.RGBA{0, 0, 0, 255},       // 0: dead/black
-			color.RGBA{255, 0, 0, 255},     // 1: red (age 0)
-			color.RGBA{255, 165, 0, 255},   // 2: orange (age 1)
-			color.RGBA{255, 255, 0, 255},   // 3: yellow (age 2)
-			color.RGBA{0, 255, 0, 255},     // 4: green (age 3)
-			color.RGBA{0, 255, 255, 255},   // 5: cyan (age 4)
-			color.RGBA{0, 0, 255, 255},     // 6: blue (age 5)
-			color.RGBA{128, 0, 255, 255},   // 7: violet (age 6)
-			color.RGBA{255, 0, 255, 255},   // 8: magenta (age 7+)
+			color.RGBA{0, 0, 0, 255},     // 0: dead/black
+			color.RGBA{255, 0, 0, 255},   // 1: red (age 0)
+			color.RGBA{255, 165, 0, 255}, // 2: orange (age 1)
+			color.RGBA{255, 255, 0, 255}, // 3: yellow (age 2)
+			color.RGBA{0, 255, 0, 255},   // 4: green (age 3)
+			color.RGBA{0, 255, 255, 255}, // 5: cyan (age 4)
+			color.RGBA{0, 0, 255, 255},   // 6: blue (age 5)
+			color.RGBA{128, 0, 255, 255}, // 7: violet (age 6)
+			color.RGBA{255, 0, 255, 255}, // 8: magenta (age 7+)
 		}
 	}
 

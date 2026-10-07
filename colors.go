@@ -11,6 +11,7 @@ type Theme struct {
 	StatusFg   tcell.Color
 	StatusBg   tcell.Color
 	CursorFg   tcell.Color
+	AgeColored bool // Alive cells are colored by age (see GetRainbowColor)
 }
 
 // Themes contains all available color themes
@@ -68,6 +69,7 @@ var Themes = map[string]*Theme{
 		StatusFg:   tcell.ColorWhite,
 		StatusBg:   tcell.ColorDarkGray,
 		CursorFg:   tcell.ColorYellow,
+		AgeColored: true,
 	},
 }
 

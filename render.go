@@ -33,25 +33,25 @@ func (r *Renderer) DrawGrid(game *Game) {
 			screenX := x * 2 // Two characters per cell
 			screenY := y
 
-			alive := game.Grid.Cells[y][x]
-			var style tcell.Style
-
-			if alive {
-				color := r.Theme.Alive
-				// Rainbow mode uses age-based coloring
-				if r.Theme.Name == "Rainbow" && game.Ages != nil {
-					color = GetRainbowColor(game.Ages[y][x])
-				}
-				style = tcell.StyleDefault.Background(color).Foreground(color)
-			} else {
-				style = tcell.StyleDefault.Background(r.Theme.Dead).Foreground(r.Theme.Dead)
-			}
+			color := r.cellColor(game, x, y)
+			style := tcell.StyleDefault.Background(color).Foreground(color)
 
 			// Draw two characters for each cell
 			r.Screen.SetContent(screenX, screenY, ' ', nil, style)
 			r.Screen.SetContent(screenX+1, screenY, ' ', nil, style)
 		}
 	}
+}
+
+// cellColor returns the display color for the cell at (x, y)
+func (r *Renderer) cellColor(game *Game, x, y int) tcell.Color {
+	if !game.Grid.Cells[y][x] {
+		return r.Theme.Dead
+	}
+	if r.Theme.AgeColored && game.Ages != nil {
+		return GetRainbowColor(game.Ages[y][x])
+	}
+	return r.Theme.Alive
 }
 
 // DrawCursor draws the cursor at the current position (when paused)
@@ -63,17 +63,8 @@ func (r *Renderer) DrawCursor(game *Game) {
 	screenX := game.CursorX * 2
 	screenY := game.CursorY
 
-	// Get the cell state at cursor
-	alive := game.Grid.Get(game.CursorX, game.CursorY)
-	var bgColor tcell.Color
-	if alive {
-		bgColor = r.Theme.Alive
-	} else {
-		bgColor = r.Theme.Dead
-	}
-
-	// Draw cursor brackets
-	style := tcell.StyleDefault.Foreground(r.Theme.CursorFg).Background(bgColor)
+	// Draw cursor brackets over the cell's own color
+	style := tcell.StyleDefault.Foreground(r.Theme.CursorFg).Background(r.cellColor(game, game.CursorX, game.CursorY))
 	r.Screen.SetContent(screenX, screenY, '[', nil, style)
 	r.Screen.SetContent(screenX+1, screenY, ']', nil, style)
 }

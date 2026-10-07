@@ -65,10 +65,12 @@ func TestParseRuleEmptySurvival(t *testing.T) {
 
 func TestParseRuleInvalidFormat(t *testing.T) {
 	testCases := []string{
-		"B3S23",      // Missing /
-		"3/23",       // Missing B and S
-		"B3/S23/X1",  // Too many parts
-		"",           // Empty
+		"B3S23",     // Missing /
+		"3/23",      // Missing B and S
+		"B3/S23/X1", // Too many parts
+		"B3/B36",    // Two birth sections
+		"S23/S3",    // Two survival sections
+		"",          // Empty
 	}
 
 	for _, tc := range testCases {
@@ -168,5 +170,15 @@ func TestConwayRule(t *testing.T) {
 	}
 	if !reflect.DeepEqual(rule.Survival, []int{2, 3}) {
 		t.Errorf("ConwayRule survival: expected [2,3], got %v", rule.Survival)
+	}
+}
+
+func TestParseRuleDuplicateDigits(t *testing.T) {
+	rule, err := ParseRule("B33/S232")
+	if err != nil {
+		t.Fatalf("ParseRule() error = %v", err)
+	}
+	if rule.String() != "B3/S23" {
+		t.Errorf("expected duplicates dropped (B3/S23), got %s", rule.String())
 	}
 }

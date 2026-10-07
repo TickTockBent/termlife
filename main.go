@@ -15,22 +15,9 @@ import (
 // Version is set at build time
 var Version = "dev"
 
-// Game holds all runtime state
-type Game struct {
-	Grid       *Grid
-	Rule       *Rule
-	Theme      *Theme
-	FPS        int
-	Paused     bool
-	Generation int
-	CursorX    int
-	CursorY    int
-	Ages       [][]int // For rainbow mode age tracking
-}
-
 func main() {
 	// CLI flags
-	patternFlag := flag.String("pattern", "random", "Initial pattern: random, glider, blinker, pulsar, gosper-gun, etc.")
+	patternFlag := flag.String("pattern", "random", "Initial pattern: "+strings.Join(PatternNames(), ", "))
 	ruleFlag := flag.String("rule", "B3/S23", "Birth/survival rule string (e.g., B3/S23, B36/S23)")
 	colorFlag := flag.String("color", "white", "Color theme: white, green, matrix, amber, cyan, rainbow")
 	fpsFlag := flag.Int("fps", 10, "Frames per second (1-60)")
@@ -84,30 +71,51 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Validate pattern and size up front so errors print before the terminal is taken over
+	patternName := strings.ToLower(*patternFlag)
+	if _, ok := Patterns[patternName]; !ok && patternName != "random" {
+		fmt.Fprintf(os.Stderr, "Unknown pattern: %s\nAvailable: %s\n", *patternFlag, strings.Join(PatternNames(), ", "))
+		os.Exit(1)
+	}
+
+	var gridWidth, gridHeight int
+	if *sizeFlag != "" {
+		gridWidth, gridHeight, err = parseSize(*sizeFlag)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing size: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
 	// Initialize random number generator
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	randFunc := rng.Float64
 
-	// Check if GIF mode is enabled
-	gifMode := *gifFlag > 0
+	// GIF mode - no terminal UI
+	if *gifFlag > 0 {
+		cfg := GIFConfig{
+			Frames:    *gifFlag,
+			Output:    *gifOutFlag,
+			Scale:     *gifScaleFlag,
+			Delay:     *gifDelayFlag,
+			Loop:      *gifLoopFlag,
+			ThemeName: themeName,
+		}
+		if err := ValidateGIFConfig(cfg, *sizeFlag != ""); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 
-	if gifMode {
-		// GIF mode - no terminal UI
-		runGIFMode(
-			*gifFlag,
-			*gifOutFlag,
-			*gifScaleFlag,
-			*gifDelayFlag,
-			*gifLoopFlag,
-			*sizeFlag,
-			*patternFlag,
-			*wrapFlag,
-			density,
-			rule,
-			theme,
-			themeName,
-			randFunc,
-		)
+		grid, err := SetupGrid(gridWidth, gridHeight, *wrapFlag, patternName, density, randFunc)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		game := NewGame(grid, rule, theme, fps)
+		if err := ExportGIF(game, cfg, density, randFunc); err != nil {
+			fmt.Fprintf(os.Stderr, "Error exporting GIF: %v\n", err)
+			os.Exit(1)
+		}
 		return
 	}
 
@@ -119,140 +127,22 @@ func main() {
 	}
 	defer screen.Fini()
 
-	// Determine grid size
-	var gridWidth, gridHeight int
-	if *sizeFlag != "" {
-		gridWidth, gridHeight, err = parseSize(*sizeFlag)
-		if err != nil {
-			screen.Fini()
-			fmt.Fprintf(os.Stderr, "Error parsing size: %v\n", err)
-			os.Exit(1)
-		}
-	} else {
+	autoSize := *sizeFlag == ""
+	if autoSize {
 		gridWidth, gridHeight = GetGridSize(screen)
 	}
 
-	// Create grid
-	grid := NewGrid(gridWidth, gridHeight, *wrapFlag)
-
-	// Initialize pattern
-	patternName := strings.ToLower(*patternFlag)
-	if patternName == "random" {
-		grid.Randomize(density, randFunc)
-	} else {
-		pattern, ok := Patterns[patternName]
-		if !ok {
-			screen.Fini()
-			fmt.Fprintf(os.Stderr, "Unknown pattern: %s\nAvailable: %s\n", *patternFlag, strings.Join(PatternNames(), ", "))
-			os.Exit(1)
-		}
-		PlacePattern(grid, pattern, gridWidth/2, gridHeight/2)
-	}
-
-	// Create game state
-	game := &Game{
-		Grid:       grid,
-		Rule:       rule,
-		Theme:      theme,
-		FPS:        fps,
-		Paused:     false,
-		Generation: 0,
-		CursorX:    gridWidth / 2,
-		CursorY:    gridHeight / 2,
-	}
-
-	// Initialize ages for rainbow mode
-	if theme.Name == "Rainbow" {
-		game.Ages = make([][]int, gridHeight)
-		for y := range game.Ages {
-			game.Ages[y] = make([]int, gridWidth)
-		}
-	}
-
-	// Create renderer
-	renderer := NewRenderer(screen, theme)
-
-	// Run game loop
-	runGameLoop(screen, renderer, game, density, randFunc)
-}
-
-func runGIFMode(
-	frames int,
-	output string,
-	scale int,
-	delay int,
-	loop int,
-	sizeFlag string,
-	patternFlag string,
-	wrap bool,
-	density float64,
-	rule *Rule,
-	theme *Theme,
-	themeName string,
-	randFunc func() float64,
-) {
-	// Validate GIF config
-	cfg := GIFConfig{
-		Frames:    frames,
-		Output:    output,
-		Scale:     scale,
-		Delay:     delay,
-		Loop:      loop,
-		ThemeName: themeName,
-	}
-
-	hasSize := sizeFlag != ""
-	if err := ValidateGIFConfig(cfg, hasSize); err != nil {
+	grid, err := SetupGrid(gridWidth, gridHeight, *wrapFlag, patternName, density, randFunc)
+	if err != nil {
+		screen.Fini()
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+	game := NewGame(grid, rule, theme, fps)
+	game.AutoSize = autoSize
 
-	// Parse size (required in GIF mode)
-	gridWidth, gridHeight, err := parseSize(sizeFlag)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing size: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Create grid
-	grid := NewGrid(gridWidth, gridHeight, wrap)
-
-	// Initialize pattern
-	patternName := strings.ToLower(patternFlag)
-	if patternName == "random" {
-		grid.Randomize(density, randFunc)
-	} else {
-		pattern, ok := Patterns[patternName]
-		if !ok {
-			fmt.Fprintf(os.Stderr, "Unknown pattern: %s\nAvailable: %s\n", patternFlag, strings.Join(PatternNames(), ", "))
-			os.Exit(1)
-		}
-		PlacePattern(grid, pattern, gridWidth/2, gridHeight/2)
-	}
-
-	// Create game state
-	game := &Game{
-		Grid:       grid,
-		Rule:       rule,
-		Theme:      theme,
-		FPS:        10, // Not used in GIF mode
-		Paused:     false,
-		Generation: 0,
-	}
-
-	// Initialize ages for rainbow mode
-	if themeName == "rainbow" {
-		game.Ages = make([][]int, gridHeight)
-		for y := range game.Ages {
-			game.Ages[y] = make([]int, gridWidth)
-		}
-	}
-
-	// Export GIF
-	if err := ExportGIF(game, cfg, density, randFunc); err != nil {
-		fmt.Fprintf(os.Stderr, "Error exporting GIF: %v\n", err)
-		os.Exit(1)
-	}
+	renderer := NewRenderer(screen, theme)
+	runGameLoop(screen, renderer, game, density, randFunc)
 }
 
 func runGameLoop(screen tcell.Screen, renderer *Renderer, game *Game, density float64, randFunc func() float64) {
@@ -284,10 +174,13 @@ func runGameLoop(screen tcell.Screen, renderer *Renderer, game *Game, density fl
 				continue
 			}
 
-			// Handle resize events
+			// Handle resize events; auto-sized grids follow the terminal
 			if _, ok := ev.(*tcell.EventResize); ok {
+				if game.AutoSize {
+					game.Resize(GetGridSize(screen))
+				}
 				screen.Sync()
-				continue
+				break
 			}
 
 			action := HandleInput(ev, game)
