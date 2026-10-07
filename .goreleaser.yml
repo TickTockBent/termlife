@@ -26,7 +26,7 @@ builds:
 
 archives:
   - id: termlife
-    builds:
+    ids:
       - termlife
     formats:
       - tar.gz
@@ -56,6 +56,8 @@ brews:
     repository:
       owner: ticktockbent
       name: homebrew-tap
+      # GITHUB_TOKEN can't push to another repo; needs a PAT with access to homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
     homepage: https://github.com/ticktockbent/termlife
     description: Terminal-based Game of Life implementation
@@ -90,6 +92,8 @@ nfpms:
     maintainer: ticktockbent
     description: Terminal-based Game of Life implementation
     license: MIT
+    # Versionless names so the README's releases/latest/download links resolve
+    file_name_template: "{{ .PackageName }}_{{ .Os }}_{{ .Arch }}"
     formats:
       - deb
       - rpm

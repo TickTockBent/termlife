@@ -32,7 +32,7 @@ sudo rpm -i termlife_linux_amd64.rpm
 
 ### Windows
 
-Download `termlife_windows_amd64.zip` from the [Releases](https://github.com/ticktockbent/termlife/releases) page, extract, and add to your PATH.
+Download `termlife_<version>_windows_amd64.zip` from the [Releases](https://github.com/ticktockbent/termlife/releases) page, extract, and add to your PATH.
 
 ### Via Go (any platform)
 
