@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
@@ -85,7 +86,11 @@ func (r *Renderer) DrawStatusBar(game *Game, screenWidth, screenHeight int) {
 		status += " | [PAUSED]"
 	}
 
-	// Pad to fill width
+	// Pad to fill width, with the help hint right-aligned when it fits
+	helpHint := "? help "
+	if len(status)+len(helpHint) < screenWidth {
+		status += strings.Repeat(" ", screenWidth-len(status)-len(helpHint)) + helpHint
+	}
 	for len(status) < screenWidth {
 		status += " "
 	}
@@ -97,6 +102,62 @@ func (r *Renderer) DrawStatusBar(game *Game, screenWidth, screenHeight int) {
 			break
 		}
 		r.Screen.SetContent(x, statusY, ch, nil, style)
+	}
+}
+
+// DrawHelp renders the key reference as a box centered on the screen
+func (r *Renderer) DrawHelp(game *Game, screenWidth, screenHeight int) {
+	if !game.ShowHelp {
+		return
+	}
+
+	keyColumnWidth := 0
+	for _, binding := range KeyBindings {
+		keyColumnWidth = max(keyColumnWidth, len(binding[0]))
+	}
+	lines := []string{"Controls", ""}
+	for _, binding := range KeyBindings {
+		lines = append(lines, fmt.Sprintf("%-*s  %s", keyColumnWidth, binding[0], binding[1]))
+	}
+
+	innerWidth := 0
+	for _, line := range lines {
+		innerWidth = max(innerWidth, len(line))
+	}
+	boxWidth := innerWidth + 4 // Border plus one space of padding per side
+	boxHeight := len(lines) + 2
+	left := max((screenWidth-boxWidth)/2, 0)
+	top := max((screenHeight-1-boxHeight)/2, 0) // Center above the status bar
+
+	style := tcell.StyleDefault.Foreground(r.Theme.StatusFg).Background(r.Theme.StatusBg)
+	titleStyle := style.Bold(true)
+
+	for row := 0; row < boxHeight; row++ {
+		var text string
+		var leftEdge, fill, rightEdge rune
+		switch row {
+		case 0:
+			leftEdge, fill, rightEdge = '┌', '─', '┐'
+		case boxHeight - 1:
+			leftEdge, fill, rightEdge = '└', '─', '┘'
+		default:
+			leftEdge, fill, rightEdge = '│', ' ', '│'
+			text = lines[row-1]
+		}
+
+		r.Screen.SetContent(left, top+row, leftEdge, nil, style)
+		for col := 1; col < boxWidth-1; col++ {
+			r.Screen.SetContent(left+col, top+row, fill, nil, style)
+		}
+		r.Screen.SetContent(left+boxWidth-1, top+row, rightEdge, nil, style)
+
+		textStyle := style
+		if row == 1 {
+			textStyle = titleStyle
+		}
+		for col, ch := range text {
+			r.Screen.SetContent(left+2+col, top+row, ch, nil, textStyle)
+		}
 	}
 }
 

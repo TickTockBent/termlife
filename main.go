@@ -208,6 +208,7 @@ func runGameLoop(screen tcell.Screen, renderer *Renderer, game *Game, density fl
 		renderer.DrawCursor(game)
 		screenWidth, screenHeight := screen.Size()
 		renderer.DrawStatusBar(game, screenWidth, screenHeight)
+		renderer.DrawHelp(game, screenWidth, screenHeight)
 		renderer.Show()
 	}
 }

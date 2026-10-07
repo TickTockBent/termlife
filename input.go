@@ -23,7 +23,23 @@ const (
 	ActionToggleCell
 	ActionPaintCell
 	ActionEraseCell
+	ActionToggleHelp
 )
+
+// KeyBindings lists the controls shown in the help overlay
+var KeyBindings = [][2]string{
+	{"Space", "Pause / resume"},
+	{"n", "Step one generation (paused)"},
+	{"r", "Randomize grid"},
+	{"c", "Clear grid"},
+	{"+ / -", "Speed up / slow down"},
+	{"Arrows", "Move cursor (paused)"},
+	{"Enter", "Toggle cell at cursor (paused)"},
+	{"Left click", "Draw cells"},
+	{"Right click", "Erase cells"},
+	{"?", "Toggle this help"},
+	{"q / Esc", "Quit"},
+}
 
 // HandleInput processes keyboard and mouse events, returns the action to take
 func HandleInput(ev tcell.Event, game *Game) Action {
@@ -47,6 +63,10 @@ func handleKeyEvent(ev *tcell.EventKey, game *Game) Action {
 
 	switch ev.Key() {
 	case tcell.KeyEscape:
+		// Esc closes the help overlay before it quits
+		if game.ShowHelp {
+			return ActionToggleHelp
+		}
 		return ActionQuit
 	case tcell.KeyRune:
 		return handleRuneKey(ev.Rune(), game)
@@ -80,6 +100,8 @@ func handleRuneKey(r rune, game *Game) Action {
 		return ActionSpeedUp
 	case '-':
 		return ActionSlowDown
+	case '?':
+		return ActionToggleHelp
 	}
 	return ActionNone
 }
@@ -178,6 +200,9 @@ func ApplyAction(action Action, game *Game, density float64, rng func() float64)
 
 	case ActionEraseCell:
 		game.SetCell(game.CursorX, game.CursorY, false)
+
+	case ActionToggleHelp:
+		game.ShowHelp = !game.ShowHelp
 	}
 	return false
 }

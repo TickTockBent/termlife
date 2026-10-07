@@ -106,8 +106,9 @@ termlife --gif 50 --pattern r-pentomino --size 60x60 --color rainbow
 
 | Key | Action |
 |-----|--------|
-| `q` / `Esc` / `Ctrl+C` | Quit |
+| `q` / `Esc` / `Ctrl+C` | Quit (`Esc` closes help first) |
 | `Space` | Pause/resume |
+| `?` | Show/hide key reference |
 | `n` | Step one generation (when paused) |
 | `r` | Randomize grid |
 | `c` | Clear grid |

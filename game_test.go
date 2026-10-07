@@ -160,3 +160,22 @@ func TestParseSize(t *testing.T) {
 		}
 	}
 }
+
+func TestHelpToggleAndEscape(t *testing.T) {
+	game := newTestGame(10, 10, "white")
+	questionKey := tcell.NewEventKey(tcell.KeyRune, '?', tcell.ModNone)
+	escapeKey := tcell.NewEventKey(tcell.KeyEscape, 0, tcell.ModNone)
+
+	ApplyAction(HandleInput(questionKey, game), game, 0, nil)
+	if !game.ShowHelp {
+		t.Fatal("? should open the help overlay")
+	}
+
+	if quit := ApplyAction(HandleInput(escapeKey, game), game, 0, nil); quit || game.ShowHelp {
+		t.Errorf("Esc with help open should close it without quitting: quit=%v help=%v", quit, game.ShowHelp)
+	}
+
+	if quit := ApplyAction(HandleInput(escapeKey, game), game, 0, nil); !quit {
+		t.Error("Esc with help closed should quit")
+	}
+}

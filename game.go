@@ -14,6 +14,7 @@ type Game struct {
 	CursorY    int
 	Ages       [][]int // For rainbow mode age tracking
 	AutoSize   bool    // Grid follows the terminal size on resize
+	ShowHelp   bool    // Key reference overlay is visible
 }
 
 // NewGame creates a game around an initialized grid
